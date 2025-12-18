@@ -123,7 +123,7 @@ CHANNEL_MAPPING = {
     "淘剧场": ["IPTV淘剧场", "北京IPTV淘剧场", "北京淘剧场"],
     "淘4K": ["IPTV淘4K", "北京IPTV4K超清", "北京淘4K", "淘4K", "淘 4K"],
     "淘娱乐": ["IPTV淘娱乐", "北京IPTV淘娱乐", "北京淘娱乐"],
-    "淘BABY": ["IPTV淘BABY", "北京IPTV淘BABY", "北京淘BABY", "IPTV淘baby", "北京IPTV淘baby", "北京淘baby", "淘Baby", "淘宝贝],
+    "淘BABY": ["IPTV淘BABY", "北京IPTV淘BABY", "北京淘BABY", "IPTV淘baby", "北京IPTV淘baby", "北京淘baby", "淘Baby", "淘宝贝"],
     "淘萌宠": ["IPTV淘萌宠", "北京IPTV萌宠TV", "北京淘萌宠", "萌宠TV"],
     "魅力足球": ["上海魅力足球"],
     "睛彩青少": ["睛彩羽毛球", "睛彩青少HD", "睛彩青少高清", "睛彩青少hd"],
