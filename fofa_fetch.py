@@ -727,48 +727,169 @@ def third_stage():
                 for ip_p in sorted(ip_set):
                     wf.write(ip_p + "\n")
             print(f"📥 写回 {target_file}，共 {len(ip_set)} 个可用地址")
+        except Exception as e:# ===============================
+# 第三阶段（优化版 - 纯文本格式，符合图片效果）
+def third_stage():
+    print("🧩 第三阶段：多线程检测代表频道生成 IPTV.txt 并写回可用 IP 到 ip/目录（覆盖）")
+
+    if not os.path.exists(ZUBO_FILE):
+        print("⚠️ zubo.txt 不存在，跳过第三阶段")
+        return
+
+    def check_stream(url, timeout=5):
+        """检测流是否可播放"""
+        try:
+            result = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_streams", "-i", url],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=timeout + 2
+            )
+            return b"codec_type" in result.stdout
+        except Exception:
+            return False
+
+    # 别名映射
+    alias_map = {}
+    for main_name, aliases in CHANNEL_MAPPING.items():
+        for alias in aliases:
+            alias_map[alias] = main_name
+
+    # 读取现有 ip 文件，建立 ip_port -> operator 映射
+    ip_info = {}
+    if os.path.exists(IP_DIR):
+        for fname in os.listdir(IP_DIR):
+            if not fname.endswith(".txt"):
+                continue
+            province_operator = fname.replace(".txt", "")
+            try:
+                with open(os.path.join(IP_DIR, fname), encoding="utf-8") as f:
+                    for line in f:
+                        ip_port = line.strip()
+                        if ip_port:
+                            ip_info[ip_port] = province_operator
+            except Exception as e:
+                print(f"⚠️ 读取 {fname} 失败：{e}")
+
+    # 读取 zubo.txt 并按 ip:port 分组
+    groups = {}
+    total_channels = 0
+    with open(ZUBO_FILE, encoding="utf-8") as f:
+        for line in f:
+            if "," not in line:
+                continue
+
+            ch_name, url = line.strip().split(",", 1)
+            ch_main = alias_map.get(ch_name, ch_name)
+            m = re.match(r"http://([^/]+)/", url)
+            if not m:
+                continue
+
+            ip_port = m.group(1)
+            groups.setdefault(ip_port, []).append((ch_main, url))
+            total_channels += 1
+
+    print(f"📊 解析完成: {len(groups)} 个IP, {total_channels} 个频道")
+
+    # 选择代表频道并检测
+    def detect_ip(ip_port, entries):
+        """检测单个IP的代表频道"""
+        # 优先检测CCTV-1综合
+        rep_channels = [u for c, u in entries if c == "CCTV-1综合"]
+        
+        # 如果没有CCTV-1综合，检测湖南卫视
+        if not rep_channels:
+            rep_channels = [u for c, u in entries if c == "湖南卫视"]
+        
+        # 如果还没有，检测翡翠台
+        if not rep_channels:
+            rep_channels = [u for c, u in entries if c == "翡翠台"]
+        
+        # 如果还没有，使用第一个频道
+        if not rep_channels and entries:
+            rep_channels = [entries[0][1]]
+        
+        # 尝试检测每个代表频道
+        for url in rep_channels:
+            print(f"   🔍 检测 {ip_port} 的代表频道...")
+            if check_stream(url):
+                return ip_port, True, len(entries)
+        return ip_port, False, len(entries)
+
+    print(f"🚀 启动多线程检测（共 {len(groups)} 个 IP）...")
+    playable_ips = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        futures = {executor.submit(detect_ip, ip, chs): ip for ip, chs in groups.items()}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                ip_port, ok, channel_count = future.result()
+            except Exception as e:
+                print(f"⚠️ 线程检测返回异常：{e}")
+                continue
+            if ok:
+                playable_ips[ip_port] = channel_count
+
+    print(f"✅ 检测完成，可播放 IP 共 {len(playable_ips)} 个")
+    
+    # 按频道数量排序
+    sorted_ips = sorted(playable_ips.items(), key=lambda x: x[1], reverse=True)
+    print("🏆 优质IP排名（按频道数量）:")
+    for ip, count in sorted_ips[:10]:  # 显示前10个
+        print(f"   {ip}: {count} 个频道")
+
+    valid_lines = []
+    seen = set()
+    operator_playable_ips = {}
+
+    for ip_port in playable_ips.keys():
+        operator = ip_info.get(ip_port, "未知")
+
+        for c, u in groups.get(ip_port, []):
+            key = f"{c},{u}"
+            if key not in seen:
+                seen.add(key)
+                # 在频道名后添加运营商信息
+                valid_lines.append(f"{c},{u}${operator}")
+
+                operator_playable_ips.setdefault(operator, set()).add(ip_port)
+
+    # 写回可用的IP到对应文件
+    for operator, ip_set in operator_playable_ips.items():
+        target_file = os.path.join(IP_DIR, operator + ".txt")
+        try:
+            with open(target_file, "w", encoding="utf-8") as wf:
+                for ip_p in sorted(ip_set):
+                    wf.write(ip_p + "\n")
+            print(f"📥 写回 {target_file}，共 {len(ip_set)} 个可用地址")
         except Exception as e:
             print(f"❌ 写回 {target_file} 失败：{e}")
 
     # ===============================
-    # 写 IPTV.txt（纯文本格式，符合图2红框效果）
+    # 写 IPTV.txt（纯文本格式，符合图片效果）
     # ===============================
     
     # 获取当前时间
     beijing_now = datetime.now(timezone(timedelta(hours=8)))
-    update_date = beijing_now.strftime("%Y-%m-%d")
-    update_time = beijing_now.strftime("%H:%M:%S")
-    
-    # 根据图片中的格式，时间格式为：2025-12-23 15:45:22
     update_full = beijing_now.strftime("%Y-%m-%d %H:%M:%S")
-    
     disclaimer_url = "https://kakaxi-1.asia/LOGO/Disclaimer.mp4"
-    
-    # 先按分类组织频道
-    categorized_channels = {}
-    uncategorized_channels = []
-    
-    for line in valid_lines:
-        ch_name = line.split(",", 1)[0]
-        # 检查频道属于哪个分类
-        found_category = None
-        for category, ch_list in CHANNEL_CATEGORIES.items():
-            if ch_name in ch_list:
-                found_category = category
-                break
-        
-        if found_category:
-            categorized_channels.setdefault(found_category, []).append(line)
-        else:
-            uncategorized_channels.append(line)
     
     try:
         with open(IPTV_FILE, "w", encoding="utf-8") as f:
             # ===============================
-            # 写入更新时间分类（如图2红框所示）
+            # 写入头部信息（符合图片中的格式）
+            # ===============================
+            f.write(f"更新时间：{update_full}（北京时间）\n")
+            f.write(f"频道总数：{len(valid_lines)}\n")
+            f.write(f"可用IP数：{len(playable_ips)}\n")
+            f.write(f"免责声明：{disclaimer_url}\n\n")
+            
+            # ===============================
+            # 写入"更新时间"分类（如图片红框所示）
             # ===============================
             f.write("更新时间,#genre#\n")
+            # 注意：这里需要写入一个实际的URL，格式为：时间,免责URL
             f.write(f"{update_full}, {disclaimer_url}\n")
+            # 可以添加更多统计信息行，每行格式为：文本,免责URL
             f.write(f"频道总数：{len(valid_lines)}, {disclaimer_url}\n")
             f.write(f"可用IP数：{len(playable_ips)}, {disclaimer_url}\n")
             f.write(f"免责声明：{disclaimer_url}, {disclaimer_url}\n")
@@ -778,27 +899,23 @@ def third_stage():
             # 按分类写入频道
             # ===============================
             for category, ch_list in CHANNEL_CATEGORIES.items():
-                if category in categorized_channels and categorized_channels[category]:
+                # 先找出该分类下可用的频道
+                category_channels = []
+                for ch in ch_list:
+                    for line in valid_lines:
+                        if line.startswith(ch + ","):
+                            category_channels.append(line)
+                
+                if category_channels:
                     # 写入分类标题
                     f.write(f"{category},#genre#\n")
                     
-                    # 写入该分类下的所有频道
-                    category_channels = []
+                    # 按预定义列表顺序写入该分类下的频道
                     for ch in ch_list:
-                        for line in categorized_channels[category]:
+                        for line in category_channels:
                             if line.startswith(ch + ","):
-                                # 格式化频道行：频道名,URL$运营商信息
-                                parts = line.split(",", 1)
-                                ch_name = parts[0]
-                                url_operator = parts[1]
-                                
-                                # 分割URL和运营商信息
-                                if "$" in url_operator:
-                                    url_part, operator_part = url_operator.split("$", 1)
-                                    f.write(f"{ch_name},{url_part}${operator_part}\n")
-                                else:
-                                    f.write(f"{line}\n")
-                                category_channels.append(ch)
+                                # 直接写入原始行（包含运营商信息）
+                                f.write(f"{line}\n")
                     
                     print(f"📺 {category}: {len(category_channels)} 个频道")
                     f.write("\n")
@@ -806,29 +923,28 @@ def third_stage():
             # ===============================
             # 写入其他未分类频道
             # ===============================
-            if uncategorized_channels:
-                f.write("其他频道,#genre#\n")
-                for line in uncategorized_channels:
-                    # 格式化频道行
-                    parts = line.split(",", 1)
-                    ch_name = parts[0]
-                    url_operator = parts[1]
-                    
-                    if "$" in url_operator:
-                        url_part, operator_part = url_operator.split("$", 1)
-                        f.write(f"{ch_name},{url_part}${operator_part}\n")
-                    else:
-                        f.write(f"{line}\n")
+            other_channels = []
+            for line in valid_lines:
+                ch_name = line.split(",", 1)[0]
+                # 检查是否已经在分类中出现过
+                found = False
+                for ch_list in CHANNEL_CATEGORIES.values():
+                    if ch_name in ch_list:
+                        found = True
+                        break
                 
-                print(f"📺 其他频道: {len(uncategorized_channels)} 个")
+                if not found:
+                    other_channels.append(line)
+            
+            if other_channels:
+                f.write("其他频道,#genre#\n")
+                for line in other_channels:
+                    f.write(f"{line}\n")
+                print(f"📺 其他频道: {len(other_channels)} 个")
         
         print(f"🎯 IPTV.txt 生成完成，共 {len(valid_lines)} 条频道")
         print(f"📁 文件已保存: {IPTV_FILE}")
-        print(f"📅 更新时间: {update_full}（北京时间）")
-        print(f"📊 分类统计:")
-        for category in CHANNEL_CATEGORIES.keys():
-            if category in categorized_channels:
-                print(f"   {category}: {len(categorized_channels[category])} 个频道")
+        print(f"📅 更新时间: {update_full}")
         
     except Exception as e:
         print(f"❌ 写 IPTV.txt 失败：{e}")
