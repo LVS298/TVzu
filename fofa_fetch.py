@@ -225,100 +225,103 @@ CHANNEL_MAPPING = {
     "环球奇观": ["环球奇观HD"],
 }
 
-# ===== 运营商识别配置 =====
-ISP_CONFIG = {
-    "电信": {
-        "api_keywords": ["telecom", "ct", "chinatelecom", "电信", "chinanet"],
-        "ip_patterns": [
-            r"^1[0-9]{2}\.", r"^2[0-3]{2}\.", r"^42\.", r"^43\.", r"^58\.", r"^59\.", r"^60\.", r"^61\.",
-            r"^110\.", r"^111\.", r"^112\.", r"^113\.", r"^114\.", r"^115\.", r"^116\.", r"^117\.", r"^118\.", r"^119\.",
-            r"^120\.", r"^121\.", r"^122\.", r"^123\.", r"^124\.", r"^125\.", r"^126\.", r"^127\.", r"^175\.", r"^180\.",
-            r"^182\.", r"^183\.", r"^184\.", r"^185\.", r"^186\.", r"^187\.", r"^188\.", r"^189\.", r"^223\."
-        ]
-    },
-    "联通": {
-        "api_keywords": ["unicom", "cu", "chinaunicom", "联通", "网通", "cnc", "联通宽带"],
-        "ip_patterns": [
-            r"^42\.", r"^43\.", r"^58\.", r"^59\.", r"^60\.", r"^61\.", r"^110\.", r"^111\.", r"^112\.", r"^113\.",
-            r"^114\.", r"^115\.", r"^116\.", r"^117\.", r"^118\.", r"^119\.", r"^120\.", r"^121\.", r"^122\.", r"^123\.",
-            r"^124\.", r"^125\.", r"^126\.", r"^127\.", r"^175\.", r"^180\.", r"^182\.", r"^183\.", r"^184\.", r"^185\.",
-            r"^186\.", r"^187\.", r"^188\.", r"^189\.", r"^223\."
-        ]
-    },
-    "移动": {
-        "api_keywords": ["mobile", "cm", "chinamobile", "移动", "铁通", "cmnet", "中国移动"],
-        "ip_patterns": [
-            r"^223\.", r"^36\.", r"^37\.", r"^38\.", r"^39\.", r"^100\.", r"^101\.", r"^102\.", r"^103\.", r"^104\.",
-            r"^105\.", r"^106\.", r"^107\.", r"^108\.", r"^109\.", r"^111\.", r"^112\.", r"^117\.", r"^134\.", r"^135\.",
-            r"^136\.", r"^137\.", r"^138\.",r"^139\.", r"^150\.", r"^151\.", r"^152\.", r"^157\.", r"^158\.", r"^159\.",
-            r"^170\.", r"^178\.", r"^182\.", r"^183\.", r"^184\.", r"^187\.", r"^188\.", r"^189\.", r"^211\.", r"^218\.",
-            r"^221\.", r"^223\.", r"^240\.", r"^241\.", r"^242\.", r"^243\."
-        ]
-    },
-    "广电": {
-        "api_keywords": ["broadcast", "gd", "cbn", "广电", "有线", "歌华", "东方有线", "华数", "天威", "江苏有线", 
-                        "湖北广电", "有线电视", "数字电视", "广播电视"],
-        "ip_patterns": [
-            r"^123\.", r"^124\.", r"^125\.", r"^126\.", r"^127\.", r"^192\.168\.", r"^10\.",
-            r"^172\.(1[6-9]|2[0-9]|3[0-1])\."
-        ]
-    },
-    "长城宽带": {
-        "api_keywords": ["greatwall", "gwb", "长城宽带", "鹏博士", "pengboshi"],
-        "ip_patterns": [
-            r"^124\.238\.", r"^124\.239\.", r"^125\.33\.", r"^125\.39\.", r"^125\.76\.",
-            r"^211\.161\.", r"^219\.148\.", r"^222\.222\.", r"^222\.223\."
-        ]
-    },
-    "教育网": {
-        "api_keywords": ["edu", "cernet", "教育网", "校园网", "大学", "学校"],
-        "ip_patterns": [
-            r"^202\.112\.", r"^202\.113\.", r"^202\.114\.", r"^202\.115\.", r"^202\.116\.", r"^202\.117\.", r"^202\.118\.",
-            r"^202\.119\.", r"^202\.120\.", r"^202\.121\.", r"^202\.122\.", r"^202\.123\.", r"^202\.124\.", r"^202\.125\.",
-            r"^202\.126\.", r"^202\.127\.", r"^210\.32\.", r"^210\.33\.", r"^210\.34\.", r"^210\.35\.", r"^210\.36\.",
-            r"^210\.37\.", r"^210\.38\."
-        ]
-    },
-    "阿里云": {
-        "api_keywords": ["aliyun", "alibaba", "阿里云", "alicloud"],
-        "ip_patterns": [
-            r"^47\.", r"^100\.64\.", r"^100\.65\.", r"^100\.66\.", r"^100\.67\.", r"^100\.68\.", r"^100\.69\.",
-            r"^100\.70\.", r"^100\.71\.", r"^100\.72\.", r"^100\.73\.", r"^100\.74\.", r"^100\.75\.", r"^100\.76\.",
-            r"^100\.77\.", r"^100\.78\.", r"^100\.79\.", r"^100\.80\.", r"^100\.81\.", r"^100\.82\.", r"^100\.83\.",
-            r"^100\.84\.", r"^100\.85\.", r"^100\.86\.", r"^100\.87\.", r"^100\.88\.", r"^100\.89\.", r"^100\.90\.",
-            r"^100\.91\.", r"^100\.92\.", r"^100\.93\.", r"^100\.94\.", r"^100\.95\.", r"^100\.96\.", r"^100\.97\.",
-            r"^100\.98\.", r"^100\.99\.", r"^100\.100\.", r"^100\.101\.", r"^100\.102\.", r"^100\.103\.", r"^100\.104\.",
-            r"^100\.105\.", r"^100\.106\.", r"^100\.107\.", r"^100\.108\.", r"^100\.109\.", r"^100\.110\.", r"^100\.111\.",
-            r"^100\.112\.", r"^100\.113\.", r"^100\.114\.", r"^100\.115\.", r"^100\.116\.", r"^100\.117\.", r"^100\.118\.",
-            r"^100\.119\.", r"^100\.120\.", r"^100\.121\.", r"^100\.122\.", r"^100\.123\.", r"^100\.124\.", r"^100\.125\.",
-            r"^100\.126\.", r"^100\.127\.", r"^118\.31\.", r"^121\.42\."
-        ]
-    },
-    "腾讯云": {
-        "api_keywords": ["tencent", "qcloud", "腾讯云", "tencent cloud"],
-        "ip_patterns": [
-            r"^101\.", r"^103\.", r"^111\.", r"^112\.", r"^113\.", r"^114\.", r"^115\.", r"^116\.", r"^117\.", r"^118\.",
-            r"^119\.", r"^120\.", r"^121\.", r"^122\.", r"^123\.", r"^124\.", r"^125\.", r"^129\.", r"^140\.", r"^143\.",
-            r"^150\.", r"^157\.", r"^162\.", r"^163\.", r"^171\.", r"^175\.", r"^180\.", r"^183\.", r"^202\.", r"^203\.",
-            r"^210\.", r"^211\.", r"^218\.", r"^219\.", r"^220\.", r"^221\.", r"^222\."
-        ]
-    },
-    "华为云": {
-        "api_keywords": ["huawei", "huaweicloud", "华为云", "hwcloud"],
-        "ip_patterns": [
-            r"^124\.70\.", r"^139\.9\.", r"^139\.159\.", r"^139\.224\.", r"^150\.158\.", r"^182\.92\.", r"^202\.105\.151\.",
-            r"^202\.105\.152\.", r"^202\.105\.153\.", r"^202\.105\.154\.", r"^202\.105\.155\.", r"^202\.105\.156\.",
-            r"^202\.105\.157\.", r"^202\.105\.158\.", r"^202\.105\.159\.", r"^202\.105\.160\.", r"^202\.105\.161\.",
-            r"^202\.105\.162\.", r"^202\.105\.163\.", r"^202\.105\.164\.", r"^202\.105\.165\.", r"^202\.105\.166\.",
-            r"^202\.105\.167\.", r"^202\.105\.168\.", r"^202\.105\.169\.", r"^202\.105\.170\.", r"^202\.105\.171\.",
-            r"^202\.105\.172\.", r"^202\.105\.173\.", r"^202\.105\.174\.", r"^202\.105\.175\."
-        ]
-    },
-    "其他": {
-        "api_keywords": [],
-        "ip_patterns": []
-    }
-}
+# ===== 运营商识别配置（增强版） =====
+def get_isp_from_api(data):
+    """从API数据获取运营商信息（支持多种运营商）"""
+    isp_raw = (data.get("isp") or "").lower()
+    org_raw = (data.get("org") or "").lower()
+    as_raw = (data.get("as") or "").lower()
+    
+    # 合并所有可能的文本信息
+    all_text = f"{isp_raw} {org_raw} {as_raw}"
+    
+    # 运营商关键词识别
+    if any(keyword in all_text for keyword in ["telecom", "ct", "chinatelecom", "电信", "chinanet"]):
+        return "电信"
+    elif any(keyword in all_text for keyword in ["unicom", "cu", "chinaunicom", "联通", "网通", "cnc", "联通宽带"]):
+        return "联通"
+    elif any(keyword in all_text for keyword in ["mobile", "cm", "chinamobile", "移动", "铁通", "cmnet", "中国移动"]):
+        return "移动"
+    elif any(keyword in all_text for keyword in ["broadcast", "gd", "cbn", "广电", "有线", "歌华", "东方有线", "华数", "天威", "江苏有线", 
+                                                "湖北广电", "有线电视", "数字电视", "广播电视"]):
+        return "广电"
+    elif any(keyword in all_text for keyword in ["greatwall", "gwb", "长城宽带", "鹏博士", "pengboshi"]):
+        return "长城宽带"
+    elif any(keyword in all_text for keyword in ["edu", "cernet", "教育网", "校园网", "大学", "学校"]):
+        return "教育网"
+    elif any(keyword in all_text for keyword in ["aliyun", "alibaba", "阿里云", "alicloud"]):
+        return "阿里云"
+    elif any(keyword in all_text for keyword in ["tencent", "qcloud", "腾讯云", "tencent cloud"]):
+        return "腾讯云"
+    elif any(keyword in all_text for keyword in ["huawei", "huaweicloud", "华为云", "hwcloud"]):
+        return "华为云"
+    elif any(keyword in all_text for keyword in ["baidu", "百度云", "baidu cloud"]):
+        return "百度云"
+    elif any(keyword in all_text for keyword in ["jd", "京东云", "jd cloud"]):
+        return "京东云"
+    elif any(keyword in all_text for keyword in ["ucloud", "优刻得"]):
+        return "UCloud"
+    
+    return "未知"
+
+def get_isp_by_regex(ip):
+    """通过IP地址正则匹配运营商（增强版）"""
+    # 电信IP段
+    if (re.match(r"^(1[0-9]{2}|2[0-3]{2}|42|43|58|59|60|61|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|175|180|182|183|184|185|186|187|188|189|223)\.", ip) or
+        re.match(r"^(27\.(1[6-9]|2[0-9]|3[0-1])|36\.(1[2-9]|2[0-9]|3[0-2])|39\.(1[3-9]|2[0-9])|49\.(6[4-9]|[7-9][0-9])|58\.(1[7-9]|2[0-9]|3[0-9]|4[0-8]))\.", ip)):
+        return "电信"
+    
+    # 联通IP段
+    elif (re.match(r"^(42|43|58|59|60|61|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|175|180|182|183|184|185|186|187|188|189|223)\.", ip) or
+          re.match(r"^(14\.(1[3-9]|2[0-9]|3[0-2])|27\.(3[6-9]|4[0-8])|36\.(9[5-9]|[1-9][0-9][0-9])|39\.(7[7-9]|8[0-9]|9[0-6])|60\.(1[3-9]|2[0-9]|3[0-9]))\.", ip)):
+        return "联通"
+    
+    # 移动IP段
+    elif (re.match(r"^(223|36|37|38|39|100|101|102|103|104|105|106|107|108|109|134|135|136|137|138|139|150|151|152|157|158|159|170|178|182|183|184|187|188|189)\.", ip) or
+          re.match(r"^(111\.(1[7-9]|2[0-9]|3[0-9]|4[0-4])|112\.(1[6-9]|2[0-9]|3[0-9]|4[0-4])|113\.(1[3-9]|2[0-9]|3[0-9])|114\.(2[4-9]|3[0-9]|4[0-4])|115\.(1[7-9]|2[0-9]))\.", ip)):
+        return "移动"
+    
+    # 广电IP段
+    elif (re.match(r"^(123\.|124\.|125\.|126\.|127\.)", ip) or
+          re.match(r"^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))", ip)):
+        return "广电"
+    
+    # 长城宽带
+    elif (re.match(r"^(124\.238\.|124\.239\.|125\.33\.|125\.39\.|125\.76\.|211\.161\.|219\.148\.|222\.222\.|222\.223\.)", ip)):
+        return "长城宽带"
+    
+    # 教育网
+    elif (re.match(r"^(202\.112\.|202\.113\.|202\.114\.|202\.115\.|202\.116\.|202\.117\.|202\.118\.|202\.119\.|202\.120\.|202\.121\.|202\.122\.|202\.123\.|202\.124\.|202\.125\.|202\.126\.|202\.127\.)", ip) or
+          re.match(r"^(210\.32\.|210\.33\.|210\.34\.|210\.35\.|210\.36\.|210\.37\.|210\.38\.)", ip)):
+        return "教育网"
+    
+    # 阿里云
+    elif (re.match(r"^(47\.|100\.64\.|100\.(6[5-9]|[7-9][0-9]|1[0-1][0-9]|12[0-7])\.|118\.31\.|121\.42\.)", ip) or
+          re.match(r"^(101\.(3[7-9]|4[0-9]|5[0-9]|6[0-4])|106\.(1[1-9]|2[0-9]|3[0-9]|4[0-8])|110\.(7[5-9]|8[0-9]|9[0-6]))\.", ip)):
+        return "阿里云"
+    
+    # 腾讯云
+    elif (re.match(r"^(101\.|103\.|111\.|112\.|113\.|114\.|115\.|116\.|117\.|118\.|119\.|120\.|121\.|122\.|123\.|124\.|125\.|129\.|140\.|143\.)", ip) or
+          re.match(r"^(150\.|157\.|162\.|163\.|171\.|175\.|180\.|183\.|202\.|203\.|210\.|211\.|218\.|219\.|220\.|221\.|222\.)", ip)):
+        return "腾讯云"
+    
+    # 华为云
+    elif (re.match(r"^(124\.70\.|139\.9\.|139\.159\.|139\.224\.|150\.158\.|182\.92\.|202\.105\.(15[1-9]|16[0-9]|17[0-5]))\.", ip)):
+        return "华为云"
+    
+    # 百度云
+    elif (re.match(r"^(180\.(7[6-9]|8[0-9]|9[0-9])|220\.(18[1-9]|19[0-9]|20[0-8]))\.", ip)):
+        return "百度云"
+    
+    # 京东云
+    elif (re.match(r"^(116\.(19[8-9]|20[0-9])|117\.(5[1-9]|6[0-9])|119\.(28|29|30))\.", ip)):
+        return "京东云"
+    
+    # UCloud
+    elif (re.match(r"^(106\.75\.|118\.(24|25|26|31|32|89|90|91|92|93|94|95|96|97|98|99|100|101|102|103|104|105|106|107|108|109|110|111))\.", ip)):
+        return "UCloud"
+    
+    return "未知"
 
 # ===============================
 def get_run_count():
@@ -335,75 +338,6 @@ def save_run_count(count):
             f.write(str(count))
     except Exception as e:
         print(f"⚠️ 写计数文件失败：{e}")
-
-
-# ===============================
-def get_isp_from_api(data):
-    """从API数据获取运营商信息（支持多种运营商）"""
-    isp_raw = (data.get("isp") or "").lower()
-    org_raw = (data.get("org") or "").lower()
-    as_raw = (data.get("as") or "").lower()
-    
-    # 合并所有可能的文本信息
-    all_text = f"{isp_raw} {org_raw} {as_raw}"
-    
-    # 遍历所有运营商配置
-    for isp_name, config in ISP_CONFIG.items():
-        for keyword in config["api_keywords"]:
-            if keyword.lower() in all_text:
-                return isp_name
-    
-    return "其他"
-
-
-def get_isp_by_regex(ip):
-    """通过IP地址正则匹配运营商"""
-    # 遍历所有运营商配置
-    for isp_name, config in ISP_CONFIG.items():
-        for pattern in config["ip_patterns"]:
-            if re.match(pattern, ip):
-                return isp_name
-    
-    # 尝试根据知名IP段进一步判断
-    if re.match(r"^192\.168\.", ip) or re.match(r"^10\.", ip) or re.match(r"^172\.(1[6-9]|2[0-9]|3[0-1])\.", ip):
-        return "内网"
-    
-    return "其他"
-
-
-def get_combined_isp(data, ip):
-    """综合判断运营商"""
-    # 首先尝试API判断
-    isp_api = get_isp_from_api(data)
-    if isp_api != "其他":
-        return isp_api
-    
-    # 然后尝试IP正则匹配
-    isp_regex = get_isp_by_regex(ip)
-    if isp_regex != "其他":
-        return isp_regex
-    
-    # 最后根据ASN信息判断（如果有）
-    as_info = data.get("as", "").lower()
-    if "cmnet" in as_info:
-        return "移动"
-    elif "unicom" in as_info:
-        return "联通"
-    elif "chinanet" in as_info:
-        return "电信"
-    elif "cernet" in as_info or "edu" in as_info:
-        return "教育网"
-    elif "aliyun" in as_info:
-        return "阿里云"
-    elif "tencent" in as_info:
-        return "腾讯云"
-    elif "huawei" in as_info:
-        return "华为云"
-    elif "greatwall" in as_info or "gwb" in as_info:
-        return "长城宽带"
-    
-    return "其他"
-
 
 # ===============================
 # 第一阶段
@@ -423,24 +357,24 @@ def first_stage():
         time.sleep(3)
 
     province_isp_dict = {}
-    print(f"🌐 开始解析 {len(all_ips)} 个IP地址...")
     
     processed_count = 0
+    total_ips = len(all_ips)
+    
     for ip_port in all_ips:
         try:
             processed_count += 1
             host = ip_port.split(":")[0]
 
-            # 判断是否为IP地址
             is_ip = re.match(r"^\d{1,3}(\.\d{1,3}){3}$", host)
 
             if not is_ip:
                 try:
                     resolved_ip = socket.gethostbyname(host)
-                    print(f"[{processed_count}/{len(all_ips)}] 🌐 域名解析成功: {host} → {resolved_ip}")
+                    print(f"[{processed_count}/{total_ips}] 🌐 域名解析成功: {host} → {resolved_ip}")
                     ip = resolved_ip
                 except Exception:
-                    print(f"[{processed_count}/{len(all_ips)}] ❌ 域名解析失败，跳过：{ip_port}")
+                    print(f"[{processed_count}/{total_ips}] ❌ 域名解析失败，跳过：{ip_port}")
                     continue
             else:
                 ip = host
@@ -451,38 +385,31 @@ def first_stage():
                 data = res.json()
                 
                 if data.get("status") != "success":
-                    print(f"[{processed_count}/{len(all_ips)}] ⚠️ IP-API查询失败: {ip}")
+                    print(f"[{processed_count}/{total_ips}] ⚠️ IP-API查询失败: {ip}")
                     province = "未知"
                     isp = get_isp_by_regex(ip)
                 else:
                     province = data.get("regionName", "未知")
-                    isp = get_combined_isp(data, ip)
+                    isp_api = get_isp_from_api(data)
+                    isp = isp_api if isp_api != "未知" else get_isp_by_regex(ip)
                     
                     # 输出详细解析信息
-                    print(f"[{processed_count}/{len(all_ips)}] 📍 {ip}: {province} {isp}")
+                    print(f"[{processed_count}/{total_ips}] 📍 {ip}: {province} {isp}")
                     
             except Exception as e:
-                print(f"[{processed_count}/{len(all_ips)}] ⚠️ IP-API查询异常: {e}")
+                print(f"[{processed_count}/{total_ips}] ⚠️ IP-API查询异常: {e}")
                 province = "未知"
                 isp = get_isp_by_regex(ip)
-
-            if isp == "内网":
-                print(f"[{processed_count}/{len(all_ips)}] ⚠️ 内网IP，跳过：{ip_port}")
-                continue
 
             # 清理省份名称，去除特殊字符
             province_clean = re.sub(r'[\\/*?:"<>|]', "", province)
             
             # 生成文件名
-            if province_clean == "未知":
-                fname = f"其他{isp}.txt"
-            else:
-                fname = f"{province_clean}{isp}.txt"
-                
+            fname = f"{province_clean}{isp}.txt" if province_clean != "未知" else f"其他{isp}.txt"
             province_isp_dict.setdefault(fname, set()).add(ip_port)
 
         except Exception as e:
-            print(f"[{processed_count}/{len(all_ips)}] ⚠️ 解析 {ip_port} 出错：{e}")
+            print(f"[{processed_count}/{total_ips}] ⚠️ 解析 {ip_port} 出错：{e}")
             continue
 
     count = get_run_count() + 1
@@ -510,7 +437,6 @@ def first_stage():
 
     print(f"✅ 第一阶段完成，当前轮次：{count}")
     return count
-
 
 # ===============================
 # 第二阶段
@@ -593,9 +519,8 @@ def second_stage():
     except Exception as e:
         print(f"❌ 写文件失败：{e}")
 
-
 # ===============================
-# 第三阶段（优化版 - 纯文本格式，符合图片效果）
+# 第三阶段
 def third_stage():
     print("🧩 第三阶段：多线程检测代表频道生成 IPTV.txt 并写回可用 IP 到 ip/目录（覆盖）")
 
@@ -668,10 +593,6 @@ def third_stage():
         if not rep_channels:
             rep_channels = [u for c, u in entries if c == "湖南卫视"]
         
-        # 如果还没有，检测翡翠台
-        if not rep_channels:
-            rep_channels = [u for c, u in entries if c == "翡翠台"]
-        
         # 如果还没有，使用第一个频道
         if not rep_channels and entries:
             rep_channels = [entries[0][1]]
@@ -729,39 +650,26 @@ def third_stage():
         except Exception as e:
             print(f"❌ 写回 {target_file} 失败：{e}")
 
-    # ===============================
-    # 写 IPTV.txt（纯文本格式，符合图片效果）
-    # ===============================
-    
-    beijing_now = datetime.now(timezone(timedelta(hours=8)))
-    update_full = beijing_now.strftime("%Y-%m-%d %H:%M:%S")
+    # 写 IPTV.txt（纯文本格式，包含分类）
+    beijing_now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
     disclaimer_url = "https://kakaxi-1.asia/LOGO/Disclaimer.mp4"
-    
+
     try:
         with open(IPTV_FILE, "w", encoding="utf-8") as f:
-            # ===============================
-            # 写入头部信息（符合图片中的格式）
-            # ===============================
-            f.write(f"更新时间：{update_full}（北京时间）\n")
+            # 写入头部信息
+            f.write(f"更新时间：{beijing_now}（北京时间）\n")
             f.write(f"频道总数：{len(valid_lines)}\n")
             f.write(f"可用IP数：{len(playable_ips)}\n")
             f.write(f"免责声明：{disclaimer_url}\n\n")
             
-            # ===============================
-            # 写入"更新时间"分类（如图片红框所示）
-            # ===============================
+            # 写入更新时间分类
             f.write("更新时间,#genre#\n")
-            f.write(f"{update_full}, {disclaimer_url}\n")
-            f.write(f"频道总数：{len(valid_lines)}, {disclaimer_url}\n")
-            f.write(f"可用IP数：{len(playable_ips)}, {disclaimer_url}\n")
-            f.write(f"免责声明：{disclaimer_url}, {disclaimer_url}\n")
-            f.write("\n")
+            f.write(f"{beijing_now}, {disclaimer_url}\n\n")
             
-            # ===============================
             # 按分类写入频道
-            # ===============================
             for category, ch_list in CHANNEL_CATEGORIES.items():
                 category_channels = []
+                
                 for ch in ch_list:
                     for line in valid_lines:
                         if line.startswith(ch + ","):
@@ -779,9 +687,7 @@ def third_stage():
                     print(f"📺 {category}: {len(category_channels)} 个频道")
                     f.write("\n")
             
-            # ===============================
             # 写入其他未分类频道
-            # ===============================
             other_channels = []
             for line in valid_lines:
                 ch_name = line.split(",", 1)[0]
@@ -802,10 +708,40 @@ def third_stage():
         
         print(f"🎯 IPTV.txt 生成完成，共 {len(valid_lines)} 条频道")
         print(f"📁 文件已保存: {IPTV_FILE}")
-        print(f"📅 更新时间: {update_full}")
         
     except Exception as e:
         print(f"❌ 写 IPTV.txt 失败：{e}")
+
+# ===============================
+# 文件推送
+def push_all_files():
+    print("🚀 推送所有更新文件到 GitHub...")
+    try:
+        os.system('git config --global user.name "github-actions"')
+        os.system('git config --global user.email "github-actions@users.noreply.github.com"')
+    except Exception:
+        pass
+
+    # 添加所有可能的更新文件
+    files_to_add = [
+        COUNTER_FILE,
+        IPTV_FILE,
+        ZUBO_FILE,
+    ]
+    
+    for file in files_to_add:
+        if os.path.exists(file):
+            os.system(f'git add "{file}" 2>/dev/null || echo "⚠️ 添加 {file} 失败"')
+    
+    # 添加ip目录下所有文件
+    if os.path.exists(IP_DIR):
+        os.system('git add ip/*.txt 2>/dev/null || echo "⚠️ 添加ip目录文件失败"')
+    
+    # 提交并推送
+    commit_message = f"自动更新：第{get_run_count()}次运行"
+    os.system(f'git commit -m "{commit_message}" 2>/dev/null || echo "⚠️ 无需提交"')
+    os.system("git push origin main 2>/dev/null || echo '⚠️ 推送失败'")
+    print("✅ 推送完成")
 
 # ===============================
 # 主执行逻辑
@@ -816,7 +752,6 @@ if __name__ == "__main__":
     
     # 显示当前配置信息
     print(f"📁 工作目录: {os.getcwd()}")
-    print(f"📊 运营商识别配置: {len(ISP_CONFIG)} 种")
     print(f"📺 频道分类: {len(CHANNEL_CATEGORIES)} 类")
     
     # 确保目录存在
