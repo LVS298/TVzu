@@ -135,7 +135,7 @@ CHANNEL_MAPPING = {
     "CHC动作电影": ["CHC-动作电影", "CHC动作电影HD", "CHC高清电影", "chc动作电影高清"],
     "淘电影": ["IPTV淘电影", "北京IPTV淘电影", "北京淘电影"],
     "淘剧场": ["IPTV淘剧场", "北京IPTV淘剧场", "北京淘剧场"],
-    "淘4K": ["IPTV淘4K", "北京IPTV4K超高清", "北京淘4K", "淘4K", ", "北京IPTV淘4K", "北京IPTV4K超清"],
+    "淘4K": ["IPTV淘4K", "北京IPTV4K超高清", "北京淘4K", "淘4K", "北京IPTV淘4K", "北京IPTV4K超清"],
     "淘娱乐": ["IPTV淘娱乐", "北京IPTV淘娱乐", "北京淘娱乐"],
     "淘BABY": ["IPTV淘BABY", "北京IPTV淘BABY", "北京淘BABY", "IPTV淘baby", "北京IPTV淘baby", "北京淘baby", "淘Baby", "淘宝贝"],
     "淘萌宠": ["IPTV淘萌宠", "北京IPTV萌宠TV", "北京淘萌宠", "萌宠TV"],
