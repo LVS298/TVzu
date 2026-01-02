@@ -4,11 +4,7 @@ import requests
 import time
 import concurrent.futures
 import subprocess
-import socket  # 添加缺失的导入
-import ipaddress  # 添加ipaddress模块
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Set, Tuple
-import json
 
 # ===============================
 # 配置区
@@ -200,7 +196,7 @@ CHANNEL_MAPPING = {
     "华数古装剧场": ["古装剧场"],
     "华数魅力时尚": ["魅力时尚"],
     "华数少儿动画": ["IPTV少儿动画", "华数电影1"],
-    "华数动画": ["华数动画", "华数卡通"],
+    "华数动画": ["华数卡通"],
     "峨眉电影": ["四川峨眉HD", "峨眉电影高清", "峨眉电影", "四川峨眉", "四川峨眉电影", "四川峨眉高清"],
     "峨眉电影4K": ["4K超高清电影"],
     "绚影4K": ["绚影4K", "睛彩绚影4K", "精彩连播", "天府绚影高清影院"],
@@ -230,146 +226,6 @@ CHANNEL_MAPPING = {
 }#格式为"频道分类中的标准名": ["rtp/中的名字"],
 
 # ===============================
-# 新增：四川城市IP段URL配置
-SICHUAN_CITY_URLS = {
-    "四川省": "https://metowolf.github.io/iplist/data/cncity/510000.txt",
-    "成都市": "https://metowolf.github.io/iplist/data/cncity/510100.txt",
-    "自贡市": "https://metowolf.github.io/iplist/data/cncity/510300.txt",
-    "攀枝花市": "https://metowolf.github.io/iplist/data/cncity/510400.txt",
-    "泸州市": "https://metowolf.github.io/iplist/data/cncity/510500.txt",
-    "德阳市": "https://metowolf.github.io/iplist/data/cncity/510600.txt",
-    "绵阳市": "https://metowolf.github.io/iplist/data/cncity/510700.txt",
-    "广元市": "https://metowolf.github.io/iplist/data/cncity/510800.txt",
-    "遂宁市": "https://metowolf.github.io/iplist/data/cncity/510900.txt",
-    "内江市": "https://metowolf.github.io/iplist/data/cncity/511000.txt",
-    "乐山市": "https://metowolf.github.io/iplist/data/cncity/511100.txt",
-    "南充市": "https://metowolf.github.io/iplist/data/cncity/511300.txt",
-    "眉山市": "https://metowolf.github.io/iplist/data/cncity/511400.txt",
-    "宜宾市": "https://metowolf.github.io/iplist/data/cncity/511500.txt",
-    "广安市": "https://metowolf.github.io/iplist/data/cncity/511600.txt",
-    "达州市": "https://metowolf.github.io/iplist/data/cncity/511700.txt",
-    "雅安市": "https://metowolf.github.io/iplist/data/cncity/511800.txt",
-    "巴中市": "https://metowolf.github.io/iplist/data/cncity/511900.txt",
-    "资阳市": "https://metowolf.github.io/iplist/data/cncity/512000.txt",
-    "阿坝藏族羌族自治州": "https://metowolf.github.io/iplist/data/cncity/513200.txt",
-    "甘孜藏族自治州": "https://metowolf.github.io/iplist/data/cncity/513300.txt",
-    "凉山彝族自治州": "https://metowolf.github.io/iplist/data/cncity/513400.txt",
-}
-
-# 新增：运营商IP段URL配置
-ISP_URLS = {
-    "电信": "https://metowolf.github.io/iplist/data/isp/chinatelecom.txt",
-    "移动": "https://metowolf.github.io/iplist/data/isp/chinamobile.txt",
-    "联通": "https://metowolf.github.io/iplist/data/isp/chinaunicom.txt",
-    "阿里云": "https://metowolf.github.io/iplist/data/isp/aliyun.txt",
-    "腾讯云": "https://metowolf.github.io/iplist/data/isp/tencent.txt",
-    "华为云": "https://metowolf.github.io/iplist/data/isp/huawei.txt",
-}
-
-# ===============================
-# 新增：IP数据管理器
-class IPDataManager:
-    """IP数据管理器，用于加载和匹配城市、运营商IP段"""
-    
-    def __init__(self):
-        self.city_cidrs = {}  # 城市 -> CIDR列表
-        self.isp_cidrs = {}   # 运营商 -> CIDR列表
-        self.loaded = False
-    
-    def load_all_data(self):
-        """加载所有IP数据"""
-        print("📥 开始加载IP数据...")
-        
-        # 加载四川城市数据
-        self.load_sichuan_city_data()
-        
-        # 加载运营商数据
-        self.load_isp_data()
-        
-        self.loaded = True
-        print(f"✅ IP数据加载完成: {len(self.city_cidrs)}个城市, {len(self.isp_cidrs)}个运营商")
-    
-    def load_sichuan_city_data(self):
-        """加载四川城市CIDR数据"""
-        for city_name, url in SICHUAN_CITY_URLS.items():
-            try:
-                response = requests.get(url, timeout=10)
-                if response.status_code == 200:
-                    cidrs = []
-                    for line in response.text.strip().split('\n'):
-                        line = line.strip()
-                        if line and not line.startswith('#'):
-                            try:
-                                network = ipaddress.ip_network(line, strict=False)
-                                cidrs.append(network)
-                            except ValueError:
-                                continue
-                    self.city_cidrs[city_name] = cidrs
-                    print(f"  ✓ 加载 {city_name}: {len(cidrs)}个CIDR")
-                else:
-                    print(f"  ✗ 加载失败 {city_name}: HTTP {response.status_code}")
-            except Exception as e:
-                print(f"  ✗ 加载失败 {city_name}: {e}")
-    
-    def load_isp_data(self):
-        """加载运营商CIDR数据"""
-        for isp_name, url in ISP_URLS.items():
-            try:
-                response = requests.get(url, timeout=10)
-                if response.status_code == 200:
-                    cidrs = []
-                    for line in response.text.strip().split('\n'):
-                        line = line.strip()
-                        if line and not line.startswith('#'):
-                            try:
-                                network = ipaddress.ip_network(line, strict=False)
-                                cidrs.append(network)
-                            except ValueError:
-                                continue
-                    self.isp_cidrs[isp_name] = cidrs
-                    print(f"  ✓ 加载 {isp_name}: {len(cidrs)}个CIDR")
-                else:
-                    print(f"  ✗ 加载失败 {isp_name}: HTTP {response.status_code}")
-            except Exception as e:
-                print(f"  ✗ 加载失败 {isp_name}: {e}")
-    
-    def get_city_by_ip(self, ip_str: str) -> str:
-        """根据IP获取城市（优先四川城市，然后其他省份）"""
-        try:
-            ip = ipaddress.ip_address(ip_str)
-            
-            # 首先检查四川各城市
-            for city_name, cidr_list in self.city_cidrs.items():
-                for cidr in cidr_list:
-                    if ip in cidr:
-                        return city_name
-            
-            return "未知城市"
-        except ValueError:
-            return "无效IP"
-        except Exception:
-            return "未知城市"
-    
-    def get_isp_by_ip_cidr(self, ip_str: str) -> str:
-        """使用CIDR精确判断IP的运营商"""
-        try:
-            ip = ipaddress.ip_address(ip_str)
-            
-            for isp_name, cidr_list in self.isp_cidrs.items():
-                for cidr in cidr_list:
-                    if ip in cidr:
-                        return isp_name
-            
-            return "未知"
-        except ValueError:
-            return "无效IP"
-        except Exception:
-            return "未知"
-
-# 全局IP数据管理器实例
-ip_manager = IPDataManager()
-
-# ===============================
 def get_run_count():
     if os.path.exists(COUNTER_FILE):
         try:
@@ -396,92 +252,47 @@ def get_isp_from_api(data):
         return "联通"
     elif "mobile" in isp_raw or "cm" in isp_raw or "chinamobile" in isp_raw:
         return "移动"
-    # 新增
-    elif "cable" in isp_raw or "cbn" in isp_raw or "broadcast" in isp_raw or "chinabroadcastnet" in isp_raw:
-        return "广电"
-    elif "aliyun" in isp_raw or "alibabacloud" in isp_raw:
-        return "阿里云"
-    elif "tencent" in isp_raw or "qcloud" in isp_raw:
-        return "腾讯云"
-    elif "huawei" in isp_raw or "huaweicloud" in isp_raw:
-        return "华为云"
-    elif "ctm" in isp_raw or "macau telecom" in isp_raw or "macau-telecom" in isp_raw:
-        return "澳门电讯"
-    else:
-        return "未知"
 
-# ===== 运营商识别配置 =====
-ISP_CONFIG = {
-    "电信": {
-        "api_keywords": ["telecom", "ct", "chinatelecom", "电信", "chinanet"],
-        "ip_patterns": [
-            r"^1\.(1[2-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|6[0-9]|8[0-9]|9[0-9])\.",
-            r"^5\.",
-            r"^8\.(13[0-9]|14[0-9]|15[0-9])\.",
-            r"^14\.",
-            # ... 其他电信IP段
-        ]
-    },
-    # ... 其他运营商配置（可以保持原有）
-}
-
-# 修改get_isp_by_ip函数，结合CIDR方法
-def get_isp_by_ip(ip_address: str) -> str:
-    """
-    根据IP地址判断运营商（结合正则和CIDR方法）
-    
-    Args:
-        ip_address: IP地址字符串
-        
-    Returns:
-        str: 运营商名称或"未知"
-    """
-    # 首先使用正则方法（保持向后兼容）
-    for isp_name, config in ISP_CONFIG.items():
-        for pattern in config["ip_patterns"]:
-            if re.match(pattern, ip_address):
-                return isp_name
-    
-    # 如果正则没匹配到，使用CIDR方法
-    if ip_manager.loaded:
-        return ip_manager.get_isp_by_ip_cidr(ip_address)
-    
     return "未知"
 
+
+def get_isp_by_regex(ip):
+    if re.match(r"^(1[0-9]{2}|2[0-3]{2}|42|43|58|59|60|61|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|175|180|182|183|184|185|186|187|188|189|223)\.", ip):
+        return "电信"
+
+    elif re.match(r"^(42|43|58|59|60|61|110|111|112|113|114|115|116|117|118|119|120|121|122|123|124|125|126|127|175|180|182|183|184|185|186|187|188|189|223)\.", ip):
+        return "联通"
+
+    elif re.match(r"^(223|36|37|38|39|100|101|102|103|104|105|106|107|108|109|134|135|136|137|138|139|150|151|152|157|158|159|170|178|182|183|184|187|188|189)\.", ip):
+        return "移动"
+
+    return "未知"
+
+
 # ===============================
-# 修改后的第一阶段：结合城市和运营商分类
+# 第一阶段
 def first_stage():
-    """第一阶段：爬取IP并分类（结合城市和运营商）"""
-    
-    # 加载IP数据
-    if not ip_manager.loaded:
-        ip_manager.load_all_data()
-    
     os.makedirs(IP_DIR, exist_ok=True)
     all_ips = set()
 
-    # 爬取FOFA数据
     for url, filename in FOFA_URLS.items():
         print(f"📡 正在爬取 {filename} ...")
         try:
             r = requests.get(url, headers=HEADERS, timeout=15)
             urls_all = re.findall(r'<a href="http://(.*?)"', r.text)
             all_ips.update(u.strip() for u in urls_all if u.strip())
-            print(f"  ✓ 获取到 {len(urls_all)} 个URL")
         except Exception as e:
             print(f"❌ 爬取失败：{e}")
         time.sleep(3)
 
-    # 分类字典：文件名 -> IP集合
-    classification_dict = {}
+    province_isp_dict = {}
 
-    # 处理每个IP
     for ip_port in all_ips:
         try:
             host = ip_port.split(":")[0]
 
-            # 域名解析
             is_ip = re.match(r"^\d{1,3}(\.\d{1,3}){3}$", host)
+
             if not is_ip:
                 try:
                     resolved_ip = socket.gethostbyname(host)
@@ -493,72 +304,45 @@ def first_stage():
             else:
                 ip = host
 
-            # 获取地理信息（API）
-            province = "未知"
-            try:
-                res = requests.get(f"http://ip-api.com/json/{ip}?lang=zh-CN", timeout=5)
-                if res.status_code == 200:
-                    data = res.json()
-                    if data.get("status") == "success":
-                        province = data.get("regionName", "未知")
-            except Exception:
-                pass
+            res = requests.get(f"http://ip-api.com/json/{ip}?lang=zh-CN", timeout=10)
+            data = res.json()
 
-            # 获取城市信息（CIDR方法）
-            city = ip_manager.get_city_by_ip(ip)
-            
-            # 获取运营商信息（结合API和CIDR）
-            isp = "未知"
-            try:
-                if res.status_code == 200 and data.get("status") == "success":
-                    isp = get_isp_from_api(data)
-            except Exception:
-                pass
-            
+            province = data.get("regionName", "未知")
+            isp = get_isp_from_api(data)
+
             if isp == "未知":
-                isp = get_isp_by_ip(ip)  # 使用结合方法
+                isp = get_isp_by_regex(ip)
 
-            # 生成文件名
-            if province == "四川" and city != "未知城市" and city != "四川省":
-                # 四川城市级分类：四川_成都市_电信.txt
-                filename = f"四川_{city}_{isp}.txt"
-            elif province != "未知" and isp != "未知":
-                # 省级分类：四川电信.txt
-                filename = f"{province}{isp}.txt"
-            else:
-                print(f"⚠️ 无法分类，跳过：{ip_port}")
+            if isp == "未知":
+                print(f"⚠️ 无法判断运营商，跳过：{ip_port}")
                 continue
 
-            # 添加到分类字典
-            classification_dict.setdefault(filename, set()).add(ip_port)
+            fname = f"{province}{isp}.txt"
+            province_isp_dict.setdefault(fname, set()).add(ip_port)
 
         except Exception as e:
             print(f"⚠️ 解析 {ip_port} 出错：{e}")
             continue
 
-    # 保存计数
     count = get_run_count() + 1
     save_run_count(count)
 
-    # 写入文件
-    for filename, ip_set in classification_dict.items():
+    for filename, ip_set in province_isp_dict.items():
         path = os.path.join(IP_DIR, filename)
         try:
-            # 追加写入模式
-            mode = "a" if os.path.exists(path) else "w"
-            with open(path, mode, encoding="utf-8") as f:
+            with open(path, "a", encoding="utf-8") as f:
                 for ip_port in sorted(ip_set):
                     f.write(ip_port + "\n")
-            print(f"📁 {path} 已{'追加' if mode == 'a' else '新建'}写入 {len(ip_set)} 个IP")
+            print(f"{path} 已追加写入 {len(ip_set)} 个 IP")
         except Exception as e:
             print(f"❌ 写入 {path} 失败：{e}")
 
     print(f"✅ 第一阶段完成，当前轮次：{count}")
-    print(f"   共处理 {len(all_ips)} 个IP，分类到 {len(classification_dict)} 个文件")
     return count
 
+
 # ===============================
-# 第二阶段（保持不变）
+# 第二阶段
 def second_stage():
     print("🔔 第二阶段触发：生成 zubo.txt")
     if not os.path.exists(IP_DIR):
@@ -579,20 +363,11 @@ def second_stage():
         rtp_path = os.path.join(RTP_DIR, ip_file)
 
         if not os.path.exists(rtp_path):
-            # 尝试匹配简化的文件名（去掉城市前缀）
-            if ip_file.startswith("四川_"):
-                # 如：四川_成都市_电信.txt -> 四川电信.txt
-                simplified = ip_file.replace("四川_", "").split("_")[-1]
-                simplified = "四川" + simplified
-                rtp_path = os.path.join(RTP_DIR, simplified)
-                if not os.path.exists(rtp_path):
-                    continue
-            else:
-                continue
+            continue
 
         try:
             with open(ip_path, encoding="utf-8") as f1, open(rtp_path, encoding="utf-8") as f2:
-                ip_lines  = [x.strip() for x in f1 if x.strip()]
+                ip_lines = [x.strip() for x in f1 if x.strip()]
                 rtp_lines = [x.strip() for x in f2 if x.strip()]
         except Exception as e:
             print(f"⚠️ 文件读取失败：{e}")
@@ -606,27 +381,22 @@ def second_stage():
                 if "," not in rtp_line:
                     continue
 
-                ch_name, src_url = rtp_line.split(",", 1)
+                ch_name, rtp_url = rtp_line.split(",", 1)
 
-                if "rtp://" in src_url:
-                    part = src_url.split("rtp://", 1)[1]
+                if "rtp://" in rtp_url:
+                    part = rtp_url.split("rtp://", 1)[1]
                     combined_lines.append(f"{ch_name},http://{ip_port}/rtp/{part}")
 
-                elif "udp://" in src_url:
-                    part = src_url.split("udp://", 1)[1]
+                elif "udp://" in rtp_url:
+                    part = rtp_url.split("udp://", 1)[1]
                     combined_lines.append(f"{ch_name},http://{ip_port}/udp/{part}")
 
-                elif src_url.startswith(("http://", "https://")):
-                    # 把 // 后面到第一个 / 之前的那段（域名或IP+端口）整体换掉
-                    new_url = re.sub(r"(?<=://)[^/]+", ip_port, src_url)
-                    combined_lines.append(f"{ch_name},{new_url}")
-
-    # 去重：同一 url 只保留一条（频道名取第一次出现的）
+    # 去重
     unique = {}
     for line in combined_lines:
-        url = line.split(",", 1)[1]
-        if url not in unique:
-            unique[url] = line
+        url_part = line.split(",", 1)[1]
+        if url_part not in unique:
+            unique[url_part] = line
 
     try:
         with open(ZUBO_FILE, "w", encoding="utf-8") as f:
@@ -636,8 +406,9 @@ def second_stage():
     except Exception as e:
         print(f"❌ 写文件失败：{e}")
 
+
 # ===============================
-# 第三阶段（保持不变）
+# 第三阶段
 def third_stage():
     print("🧩 第三阶段：多线程检测代表频道生成 IPTV.txt 并写回可用 IP 到 ip/目录（覆盖）")
 
@@ -767,7 +538,7 @@ def third_stage():
         print(f"❌ 写 IPTV.txt 失败：{e}")
 
 # ===============================
-# 文件推送（保持不变）
+# 文件推送
 def push_all_files():
     print("🚀 推送所有更新文件到 GitHub...")
     try:
@@ -789,7 +560,6 @@ if __name__ == "__main__":
     os.makedirs(IP_DIR, exist_ok=True)
     os.makedirs(RTP_DIR, exist_ok=True)
 
-    # 运行第一阶段（已集成城市+运营商分类）
     run_count = first_stage()
 
     if run_count % 10 == 0:
@@ -799,3 +569,4 @@ if __name__ == "__main__":
         print("ℹ️ 本次不是 10 的倍数，跳过第二、三阶段")
 
     push_all_files()
+
