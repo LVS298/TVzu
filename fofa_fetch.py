@@ -650,75 +650,14 @@ def second_stage():
         print(f"❌ 写文件失败：{e}")
 
 # ===============================
-# 配置区新增（请添加到文件开头的配置区）
+# 在文件开头的配置区添加（放在现有配置后面）
 MAX_RUNTIME = 10800  # 最大运行时间：3小时（10800秒）
-MAX_SOURCES_PER_CHANNEL_CHECK = 50  # 每个频道最多检测的源数量
-FAST_CHECK_TIMEOUT = 2  # 快速检测超时时间
-BATCH_SIZE = 20  # 每批检测的频道数量
-MIN_SUCCESS_RATE = 0.05  # 最小成功率阈值
+MAX_SOURCES_PER_CHANNEL_CHECK = 60  # 每个频道最多检测60个源
+BATCH_SIZE = 15  # 每批检测15个频道
 # ===============================
 
 # ===============================
-# 新增：快速流媒体检测类（放在SourceSelector类后面）
-class FastStreamChecker:
-    """快速检测类 - 使用HTTP HEAD请求代替ffprobe"""
-    
-    def __init__(self, timeout=FAST_CHECK_TIMEOUT):
-        self.timeout = timeout
-        self.cache = {}
-        self.cache_time = {}
-        self.lock = threading.Lock()
-    
-    def check_stream_fast(self, url, force=False):
-        """快速检测：只检查HTTP响应头，检查是否能连接"""
-        current_time = time.time()
-        
-        # 检查缓存
-        with self.lock:
-            if not force and url in self.cache:
-                if current_time - self.cache_time.get(url, 0) < 300:  # 缓存5分钟
-                    return self.cache[url], 0.5
-        
-        try:
-            start_time = time.time()
-            # 只发送HEAD请求，检查是否能连接
-            response = requests.head(
-                url, 
-                timeout=self.timeout, 
-                allow_redirects=True,
-                headers={"User-Agent": "Mozilla/5.0"}
-            )
-            response_time = time.time() - start_time
-            success = response.status_code < 400
-            
-            # 更新缓存
-            with self.lock:
-                self.cache[url] = success
-                self.cache_time[url] = current_time
-            
-            return success, response_time
-        except Exception:
-            with self.lock:
-                self.cache[url] = False
-                self.cache_time[url] = current_time
-            return False, None
-    
-    def batch_check_fast(self, urls, max_workers=20):
-        """快速批量检测"""
-        results = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_url = {executor.submit(self.check_stream_fast, url): url for url in urls}
-            for future in concurrent.futures.as_completed(future_to_url):
-                url = future_to_url[future]
-                try:
-                    success, resp_time = future.result()
-                    results[url] = (success, resp_time)
-                except Exception:
-                    results[url] = (False, None)
-        return results
-
-# ===============================
-# 优化后的第三阶段
+# 优化后的第三阶段（简化版）
 def third_stage():
     print("🧩 第三阶段：智能多源检测生成 IPTV.txt")
     start_time = time.time()
@@ -728,8 +667,7 @@ def third_stage():
         return
 
     # 初始化检测工具
-    fast_checker = FastStreamChecker()
-    standard_checker = StreamChecker()
+    checker = StreamChecker()
     score_manager = SourceScoreManager()
 
     # 别名映射
@@ -738,7 +676,7 @@ def third_stage():
         for alias in aliases:
             alias_map[alias] = main_name
 
-    # 读取现有 ip 文件，建立 ip_port -> operator 映射
+    # 读取IP信息
     ip_info = {}
     if os.path.exists(IP_DIR):
         for fname in os.listdir(IP_DIR):
@@ -754,22 +692,19 @@ def third_stage():
             except Exception as e:
                 print(f"⚠️ 读取 {fname} 失败：{e}")
 
-    # 读取 zubo.txt 并按频道分组
+    # 读取zubo.txt
     channel_sources = defaultdict(list)
     with open(ZUBO_FILE, encoding="utf-8") as f:
         for line in f:
             if "," not in line:
                 continue
-
             ch_name, url = line.strip().split(",", 1)
             ch_main = alias_map.get(ch_name, ch_name)
             m = re.match(r"http://([^/]+)/", url)
             if not m:
                 continue
-
             ip_port = m.group(1)
             operator = ip_info.get(ip_port, "未知")
-            
             channel_sources[ch_main].append({
                 'url': url,
                 'operator': operator,
@@ -779,103 +714,45 @@ def third_stage():
     print(f"🚀 开始智能检测（共 {len(channel_sources)} 个频道）")
     print(f"⏰ 时间限制: {MAX_RUNTIME/3600:.1f}小时")
 
-    # 按源数量排序，先处理源少的频道（这样可以快速获得结果）
-    sorted_channels = sorted(channel_sources.items(), key=lambda x: len(x[1]))
-    
     valid_sources_per_channel = {}
     channels_processed = 0
-    total_sources_checked = 0
-    total_sources_found = 0
-
+    
+    # 按源数量排序，先处理源少的频道
+    sorted_channels = sorted(channel_sources.items(), key=lambda x: len(x[1]))
+    
     for channel, sources in sorted_channels:
         # 检查是否超时
         elapsed = time.time() - start_time
         if elapsed > MAX_RUNTIME:
-            print(f"⏰ 达到时间限制（{elapsed/60:.1f}分钟），停止检测。已处理 {channels_processed}/{len(sorted_channels)} 个频道")
+            print(f"⏰ 达到时间限制，停止检测。已处理 {channels_processed}/{len(sorted_channels)} 个频道")
             break
-
+            
         channels_processed += 1
         total_sources = len(sources)
         
-        # 显示进度
-        progress = (channels_processed / len(sorted_channels)) * 100
-        time_left = (MAX_RUNTIME - elapsed) / 60 if elapsed < MAX_RUNTIME else 0
-        print(f"\n  [{channels_processed}/{len(sorted_channels)}] {progress:.1f}% 📺 检测频道: {channel}")
-        print(f"    总源数: {total_sources} | 已用时间: {elapsed/60:.1f}分钟 | 剩余时间: {time_left:.1f}分钟")
+        print(f"\n  [{channels_processed}/{len(sorted_channels)}] 📺 检测频道: {channel}")
+        print(f"    总源数: {total_sources} | 已用时: {elapsed/60:.1f}分钟")
         
-        # ===== 第一阶段：快速检测，筛选可能可用的源 =====
-        # 如果源太多，进行抽样
-        if total_sources > MAX_SOURCES_PER_CHANNEL_CHECK * 2:
-            # 分层抽样：优先保留评分高的源
-            sources_with_scores = []
-            for s in sources:
-                score = score_manager.scores.get(s['url'], {}).get('score', 50)
-                sources_with_scores.append((s, score))
-            
-            # 按评分排序，取前N个
-            sources_with_scores.sort(key=lambda x: x[1], reverse=True)
-            
-            # 保留高分源，再随机补充一些低分源以防遗漏
-            high_score_count = min(MAX_SOURCES_PER_CHANNEL_CHECK, len(sources_with_scores))
-            sources_to_fast_check = [s[0] for s in sources_with_scores[:high_score_count]]
-            
-            # 如果还有名额，随机补充一些
-            if len(sources_to_fast_check) < MAX_SOURCES_PER_CHANNEL_CHECK and len(sources_with_scores) > high_score_count:
-                remaining = sources_with_scores[high_score_count:]
-                random_count = min(MAX_SOURCES_PER_CHANNEL_CHECK - len(sources_to_fast_check), len(remaining))
-                random_samples = random.sample(remaining, random_count)
-                sources_to_fast_check.extend([s[0] for s in random_samples])
+        # === 核心优化：限制检测数量 ===
+        # 如果源太多，只检测前 MAX_SOURCES_PER_CHANNEL_CHECK 个
+        if total_sources > MAX_SOURCES_PER_CHANNEL_CHECK:
+            # 随机抽样检测，避免每次都检测同样的源
+            sources_to_check = random.sample(sources, MAX_SOURCES_PER_CHANNEL_CHECK)
+            print(f"    源数过多，随机检测 {MAX_SOURCES_PER_CHANNEL_CHECK} 个")
         else:
-            sources_to_fast_check = sources
-
-        print(f"    第一阶段快速检测: {len(sources_to_fast_check)}/{total_sources} 个源")
+            sources_to_check = sources
         
-        # 执行快速检测
-        fast_urls = [s['url'] for s in sources_to_fast_check]
-        fast_results = fast_checker.batch_check_fast(fast_urls, max_workers=20)
+        # 批量检测
+        urls = [s['url'] for s in sources_to_check]
+        results = checker.batch_check(urls, max_workers=10)
         
-        # 找出快速检测通过的源
-        fast_passed = []
-        for source in sources_to_fast_check:
-            if fast_results.get(source['url'], (False, None))[0]:
-                fast_passed.append(source)
-        
-        print(f"    快速检测通过: {len(fast_passed)}/{len(sources_to_fast_check)}")
-        
-        # 如果没有快速通过的源，继续下一频道
-        if not fast_passed:
-            print(f"    ⚠️ 没有可用源，跳过")
-            valid_sources_per_channel[channel] = []
-            continue
-        
-        # ===== 第二阶段：对快速通过的源进行完整检测 =====
-        # 限制完整检测的数量
-        if len(fast_passed) > MAX_SOURCES_PER_CHANNEL:
-            # 如果太多，按评分排序后取前N个
-            fast_passed_with_scores = []
-            for s in fast_passed:
-                score = score_manager.scores.get(s['url'], {}).get('score', 50)
-                fast_passed_with_scores.append((s, score))
-            
-            fast_passed_with_scores.sort(key=lambda x: x[1], reverse=True)
-            sources_to_full_check = [s[0] for s in fast_passed_with_scores[:MAX_SOURCES_PER_CHANNEL]]
-        else:
-            sources_to_full_check = fast_passed
-
-        print(f"    第二阶段完整检测: {len(sources_to_full_check)}/{len(fast_passed)} 个源")
-        
-        # 执行完整检测
-        full_urls = [s['url'] for s in sources_to_full_check]
-        full_results = standard_checker.batch_check(full_urls, max_workers=10)
-        
-        # 收集完整检测通过的源
+        # 收集可用源
         available_sources = []
-        for source in sources_to_full_check:
+        for source in sources_to_check:
             url = source['url']
-            success, response_time = full_results.get(url, (False, None))
+            success, response_time = results.get(url, (False, None))
             
             if success:
-                # 更新评分
                 score_manager.update_score(url, True, response_time)
                 available_sources.append({
                     'url': url,
@@ -884,32 +761,14 @@ def third_stage():
                     'score': score_manager.scores.get(url, {}).get('score', 50),
                     'response_time': response_time
                 })
-                total_sources_found += 1
             else:
                 score_manager.update_score(url, False)
-            
-            total_sources_checked += 1
         
         # 按评分排序，取前MAX_SOURCES_PER_CHANNEL个
         available_sources.sort(key=lambda x: x['score'], reverse=True)
         valid_sources_per_channel[channel] = available_sources[:MAX_SOURCES_PER_CHANNEL]
         
-        print(f"    ✅ 最终可用: {len(valid_sources_per_channel[channel])}/{len(available_sources)} 个")
-        
-        # 如果可用源比例很低，记录下来供后续分析
-        if available_sources and len(available_sources) / len(sources_to_full_check) < MIN_SUCCESS_RATE:
-            print(f"    ⚠️ 注意: 该频道可用源比例较低 ({len(available_sources)}/{len(sources_to_full_check)})")
-
-    # 统计和总结
-    elapsed_total = time.time() - start_time
-    print(f"\n{'='*50}")
-    print(f"✅ 检测完成统计")
-    print(f"   总运行时间: {elapsed_total/60:.1f} 分钟")
-    print(f"   处理频道数: {channels_processed}/{len(sorted_channels)}")
-    print(f"   检测源总数: {total_sources_checked}")
-    print(f"   发现可用源: {total_sources_found}")
-    print(f"   最终保留源: {sum(len(v) for v in valid_sources_per_channel.values())}")
-    print(f"{'='*50}\n")
+        print(f"    ✅ 可用: {len(available_sources)} 个，保留 {len(valid_sources_per_channel[channel])} 个")
 
     # 统计可用IP
     playable_ips = set()
@@ -917,9 +776,12 @@ def third_stage():
         for source in sources:
             playable_ips.add(source['ip_port'])
 
-    print(f"📊 可播放 IP 共 {len(playable_ips)} 个")
+    elapsed_total = time.time() - start_time
+    print(f"\n✅ 检测完成，总用时 {elapsed_total/60:.1f} 分钟")
+    print(f"   处理频道: {channels_processed} 个")
+    print(f"   可用IP: {len(playable_ips)} 个")
 
-    # 更新IP文件（只保留可用IP）
+    # 更新IP文件
     operator_playable_ips = defaultdict(set)
     for ip_port in playable_ips:
         operator = ip_info.get(ip_port, "未知")
@@ -935,15 +797,14 @@ def third_stage():
         except Exception as e:
             print(f"❌ 写回 {target_file} 失败：{e}")
 
-    # 生成IPTV.txt（支持多源，格式优化）
+    # 生成IPTV.txt
     beijing_now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
     disclaimer_url = "https://kakaxi-1.asia/LOGO/Disclaimer.mp4"
 
     try:
         with open(IPTV_FILE, "w", encoding="utf-8") as f:
             f.write(f"更新时间: {beijing_now}（北京时间）\n")
-            f.write(f"检测用时: {elapsed_total/60:.1f} 分钟\n")
-            f.write(f"每组频道提供 {MAX_SOURCES_PER_CHANNEL} 个备用源，播放器可自动切换\n\n")
+            f.write(f"检测用时: {elapsed_total/60:.1f} 分钟\n\n")
             f.write("更新时间,#genre#\n")
             f.write(f"{beijing_now},{disclaimer_url}\n\n")
 
@@ -953,53 +814,35 @@ def third_stage():
                     if ch in valid_sources_per_channel and valid_sources_per_channel[ch]:
                         sources = valid_sources_per_channel[ch]
                         for i, source in enumerate(sources, 1):
-                            # 格式：频道名,URL$运营商 [备用N] (响应时间)
                             if len(sources) > 1:
-                                f.write(f"{ch},{source['url']}$运营:{source['operator']} [备用{i}] ({source.get('response_time', 0):.1f}s)\n")
+                                f.write(f"{ch},{source['url']}$运营:{source['operator']} [备用{i}]\n")
                             else:
-                                f.write(f"{ch},{source['url']}$运营:{source['operator']} ({source.get('response_time', 0):.1f}s)\n")
+                                f.write(f"{ch},{source['url']}$运营:{source['operator']}\n")
                     else:
-                        # 没有可用源的频道，添加注释
                         f.write(f"# {ch},暂无可用源\n")
                 f.write("\n")
         
-        # 生成M3U格式
-        generate_m3u(valid_sources_per_channel, beijing_now, elapsed_total)
+        # 生成M3U
+        generate_m3u_simple(valid_sources_per_channel, beijing_now)
         
-        print(f"🎯 IPTV.txt 生成完成，共覆盖 {len([v for v in valid_sources_per_channel.values() if v])} 个有源的频道")
+        print(f"🎯 IPTV.txt 生成完成")
     except Exception as e:
         print(f"❌ 写 IPTV.txt 失败：{e}")
 
-def generate_m3u(channel_sources, update_time, elapsed_time):
-    """生成M3U格式的播放列表（优化版）"""
+def generate_m3u_simple(channel_sources, update_time):
+    """简化版M3U生成"""
     m3u_file = "IPTV.m3u"
     try:
         with open(m3u_file, "w", encoding="utf-8") as f:
             f.write("#EXTM3U\n")
-            f.write(f'#EXTINF:-1 tvg-name="更新时间" group-title="系统信息",{update_time} (检测用时:{elapsed_time/60:.1f}分钟)\n\n')
+            f.write(f"#EXTINF:-1 group-title=\"更新时间\",{update_time}\n\n")
             
             for channel, sources in channel_sources.items():
                 if not sources:
                     continue
-                    
                 for i, source in enumerate(sources, 1):
-                    # 添加更详细的标签
-                    tags = []
-                    tags.append(f"tvg-name=\"{channel}\"")
-                    tags.append(f"tvg-logo=\"https://example.com/logo/{channel}.png\"")
-                    tags.append("group-title=\"自动分类\"")
-                    
-                    if len(sources) > 1:
-                        title = f"{channel} [备用{i}]"
-                        tags.append(f"backup=\"{i}\"")
-                    else:
-                        title = channel
-                    
-                    # 添加响应时间信息
-                    if source.get('response_time'):
-                        tags.append(f"response-time=\"{source['response_time']:.1f}\"")
-                    
-                    f.write(f"#EXTINF:-1 {' '.join(tags)},{title}\n")
+                    title = f"{channel} [备用{i}]" if len(sources) > 1 else channel
+                    f.write(f"#EXTINF:-1 group-title=\"自动分类\",{title}\n")
                     f.write(f"{source['url']}\n")
         
         print(f"📺 M3U文件生成完成: {m3u_file}")
